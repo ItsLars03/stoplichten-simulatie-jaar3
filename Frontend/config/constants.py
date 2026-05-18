@@ -6,7 +6,7 @@ FPS = 60
 
 # --- API ---
 API_URL = "http://localhost:5235/api/data"
-API_INTERVAL = 1.0
+API_INTERVAL = 0.5
 
 # --- Speeds ---
 CAR_SPEED = 150

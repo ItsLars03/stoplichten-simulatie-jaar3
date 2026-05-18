@@ -133,6 +133,7 @@ class RoadEntity:
 
     def resume_if_green(self, tl_map, train_blocked=False):
         """Clear a waiting state when a signal or train crossing allows movement."""
+        green_states = {"Green", "GreenRight", "GreenStraightAndRight"}
         if not self.waiting:
             return
         if self.wait_reason == "vehicle":
@@ -149,7 +150,7 @@ class RoadEntity:
                 self.waiting_light_id = None
             return
         tl = tl_map.get(self.waiting_light_id)
-        if tl and tl.state == "Green":
+        if tl and tl.state in green_states:
             self.waiting = False
             self.wait_reason = None
             self.waiting_light_id = None

@@ -42,7 +42,8 @@ def send_api(traffic_lights, train_arrival_ts, result):
 
 def apply_response(traffic_lights, data):
     """Apply backend traffic light states and return the railway ``sb`` state."""
-    state_map = {0: "Red", 1: "Orange", 2: "Green"}
+    # state_map = {0: "Red", 1: "Orange", 2: "Green"}
+    state_map = {0: "Red", 1: "Orange", 2: "Green", 3: "GreenRight", 4: "GreenStraightAndRight"}
     for traffic_light in traffic_lights:
         value = data.get("trafficLights", {}).get(traffic_light.id)
         if value is not None:

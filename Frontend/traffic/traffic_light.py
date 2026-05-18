@@ -27,7 +27,15 @@ class TrafficLight:
             "Red": (RED_C, GRAY, GRAY),
             "Orange": (GRAY, ORANGE_C, GRAY),
             "Green": (GRAY, GRAY, GREEN_C),
+            "GreenRight": (GRAY, GRAY, GREEN_C),
+            "GreenStraightAndRight": (GRAY, GRAY, GREEN_C),
         }
+        if self.kind == "trainlight":
+            color_map = {
+                "Red": (GRAY, GRAY, GREEN_C),  # backend red -> show green
+                "Orange": (GRAY, ORANGE_C, GRAY),
+                "Green": (RED_C, GRAY, GRAY),  # backend green -> show red
+            }
         rc, oc, gc = color_map.get(self.state, (GRAY, GRAY, GRAY))
         if self.kind in ("bike", "pedestrian"):
             body_w = 10

@@ -37,7 +37,7 @@ class TrainCrossingController:
             self.road_blocked = True
             return
 
-        if sb_state == 2 and self.active_arrival_ts == train_arrival_ts:
+        if sb_state == 0 and self.active_arrival_ts == train_arrival_ts:
             self.backend_state = sb_state
             if self.green_started_at is None:
                 self.green_started_at = now
@@ -46,7 +46,7 @@ class TrainCrossingController:
             self.road_blocked = True
             return
 
-        if sb_state == 0 and self.active_arrival_ts is None:
+        if sb_state == 2 and self.active_arrival_ts is None:
             self.backend_state = sb_state
 
     def should_spawn_train(self, now):

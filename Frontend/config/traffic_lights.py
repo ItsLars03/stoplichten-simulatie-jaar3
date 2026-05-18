@@ -46,6 +46,8 @@ TRAFFIC_LIGHT_DEFS = [
     {"id": "31.1", "stops": ["P31_1_stop"], "pos": WAYPOINT["P31_1_stop"], "kind": "pedestrian", "light_offset": (-15, 0), "label_offset": SMALL_LABEL_OFFSET},
     {"id": "32.1", "stops": ["P32_1_stop"], "pos": WAYPOINT["P32_1_stop"], "kind": "pedestrian", "light_offset": (20, 0), "label_offset": SMALL_LABEL_OFFSET},
     {"id": "32.2", "stops": ["P32_2_stop"], "pos": WAYPOINT["P32_2_stop"], "kind": "pedestrian", "light_offset": (20, 0), "label_offset": SMALL_LABEL_OFFSET},
+
+    {"id": "sb", "stops": [], "pos": pt(760, 520), "kind": "trainlight"}
 ]
 
 # --- Special Barrier Traffic Light Definitions ---

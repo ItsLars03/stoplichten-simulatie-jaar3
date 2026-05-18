@@ -48,7 +48,7 @@ public class SimulationService : ISimulationService
         {
             var elapsed = now - light.StateChangedAt!.Value;
 
-            if (light.State == LightState.Green && elapsed >= GreenDuration)
+            if (IsGreenState(light.State) && elapsed >= GreenDuration)
             {
                 light.State = LightState.Orange;
                 light.StateChangedAt = now;
@@ -71,17 +71,26 @@ public class SimulationService : ISimulationService
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.State)
         };
     }
+    
+    private static bool IsGreenState(LightState state)
+    {
+        return state is
+            LightState.Green or
+            LightState.GreenRight or
+            LightState.GreenStraightAndRight;
+    }
 
 
     private void AssignGreens(DateTimeOffset now)
     {
         var allLights = _repository.GetAll();
         var sbLight = allLights.GetValueOrDefault("sb");
-        var trainActive = sbLight is not null && sbLight.State != LightState.Red;
+        var trainActive = sbLight is not null && sbLight.State != LightState.Green;
 
         // Do not create a new phase while another is active
         if (allLights.Values.Any(l => l.InCycle))
         {
+            Console.WriteLine("Skipping light assignment since a green/orange cycle is active");
             return;
         }
 
@@ -135,7 +144,7 @@ public class SimulationService : ISimulationService
         {
             _repository.UpdateTrafficLight(light.Id, l =>
             {
-                l.State = LightState.Green;
+                l.State = GetGreenState(light.Id);
                 l.StateChangedAt = now;
                 l.InCycle = true;
             });
@@ -145,6 +154,18 @@ public class SimulationService : ISimulationService
             $"Started synchronized phase from {oldestWaiting.Id}: " +
             $"{string.Join(", ", phaseLights.Select(l => l.Id))}");
     }
+    
+    private static LightState GetGreenState(string lightId) => lightId switch
+    {
+        "42" => Random.Shared.Next(3) switch
+        {
+            0 => LightState.Green,
+            1 => LightState.GreenRight,
+            _ => LightState.GreenStraightAndRight
+        },
+        _ => LightState.Green
+    };
+    
 
     private void ProcessTrainLogic(long currentTimestamp, long trainArrivalTimestamp)
     {
@@ -167,27 +188,27 @@ public class SimulationService : ISimulationService
 
             if (!arrival.HasValue || !timeUntilTrain.HasValue)
             {
-                light.State = LightState.Red;
-                Console.WriteLine("sb RED because no train arrival is scheduled");
+                light.State = LightState.Green;
+                Console.WriteLine("Train light GREEN because no train arrival is scheduled");
                 return;
             }
 
             if (timeUntilTrain.Value > TrainWarningWindow)
             {
-                light.State = LightState.Red;
-                Console.WriteLine("sb RED because the train is outside the warning window");
+                light.State = LightState.Green;
+                Console.WriteLine("Train light GREEN because the train is outside the warning window");
                 return;
             }
 
             if (timeUntilTrain.Value >= -TrainClearanceWindow)
             {
                 light.State = LightState.Orange;
-                Console.WriteLine("sb ORANGE because the train is approaching or still clearing");
+                Console.WriteLine("Train light ORANGE because the train is approaching or still clearing");
                 return;
             }
 
-            light.State = LightState.Green;
-            Console.WriteLine("sb GREEN because the train has cleared and the leave animation can start");
+            light.State = LightState.Red;
+            Console.WriteLine("Train light RED because the train has cleared and the leave animation can start");
         });
 
         var sbLight = _repository.GetAll().GetValueOrDefault("sb");
