@@ -1,0 +1,39 @@
+### POST simulation data
+POST http://localhost:5235/api/data
+Content-Type: application/json
+
+{
+  "currentTimestamp": 1710000000000,
+  "trainArrivalTimestamp": 1710000060000,
+  "trainActive": false,
+  "trafficLights": [
+    { "id": "1.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "2.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "2.2",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "5.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "6.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "7.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "8.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "8.2",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "9.1",  "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "10.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "11.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "12.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "22",   "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "26.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "28.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "86.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "86.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "31.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "31.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "32.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "32.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "36.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "36.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "37.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "37.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "38.1", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "38.2", "hasEntity": true, "triggeredTimestamp": 1710000000000 },
+    { "id": "42",   "hasEntity": true, "triggeredTimestamp": 1710000000000 }
+  ]
+}
