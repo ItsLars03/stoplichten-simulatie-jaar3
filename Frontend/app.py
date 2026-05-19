@@ -17,7 +17,7 @@ from config.constants import (
     HEIGHT,
     INITIAL_TRAIN_DELAY_SECONDS,
     PEDESTRIAN_SPAWN_INTERVAL,
-    WIDTH,
+    WIDTH, TRAIN_REPEAT_SECONDS,
 )
 from config.traffic_lights import TRAFFIC_LIGHT_DEFS, SB_TRAFFIC_LIGHT_DEFS
 from config.geometry import TRAIN_Y, TRAIN_Y_LOWER
@@ -108,9 +108,14 @@ def main():
 
         # spawn train if the crossing controller indicates to and we are at the arrival time
         if crossing.should_spawn_train(now):
-            trains.append(Train(TRAIN_Y, 1))
-            trains.append(Train(TRAIN_Y_LOWER, -1))
-            crossing.mark_train_spawned()
+            if not crossing.train_spawned:
+                trains.append(Train(TRAIN_Y, 1))
+                trains.append(Train(TRAIN_Y_LOWER, -1))
+                crossing.mark_train_spawned()
+                # Set the next train arrival time
+                next_train_time = now + TRAIN_REPEAT_SECONDS
+                train_arrival_ts = int(next_train_time * 1000)
+                crossing.active_arrival_ts = train_arrival_ts
 
         # remove any trains that have completed their route
         trains = [train for train in trains if not train.done]
@@ -174,6 +179,7 @@ def main():
         if api_result["data"]:
             response_data = api_result["data"]
             sb_state = apply_response(traffic_lights, response_data["payload"])
+            crossing.active_arrival_ts = train_arrival_ts
             crossing.sync_backend_state(
                 sb_state,
                 train_arrival_ts,
@@ -182,11 +188,15 @@ def main():
             api_result["data"] = None
 
         # update the railway barriers and crossing state
-        barriers.update(dt, crossing.wants_barriers_lowered(now))
-        next_train_time = crossing.update(now, barriers.is_open()) or next_train_time
+        barriers.update(
+            dt,
+            crossing.barriers_should_close,
+            crossing.barriers_should_open
+        )
 
         # if there isnt an active train arrival time, create new one
-        if crossing.active_arrival_ts is None:
+        # if crossing.active_arrival_ts is None:
+        if train_arrival_ts == 0:
             train_arrival_ts = int(next_train_time * 1000)
 
         # update sb lights based on crossing state

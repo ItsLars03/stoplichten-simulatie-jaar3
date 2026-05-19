@@ -9,85 +9,109 @@ from config.constants import (
 
 
 class TrainCrossingController:
-    """Coordinate backend train state, warning lights, barriers, and spawning."""
+    """Frontend state machine for railway crossing."""
+
+    WARNING_TO_BARRIER_SECONDS = 5
+    GREEN_RELEASE_DELAY = 5
 
     def __init__(self):
-        """Create a controller in the idle crossing state."""
-        self.backend_state = 0
+        self.backend_state = 2
+
         self.active_arrival_ts = None
+
+        self.warning_started_at = None
         self.green_started_at = None
-        self.barriers_opened_at = None
+
         self.train_spawned = False
+
         self.blinking_active = False
         self.road_blocked = False
 
+        self.barriers_should_close = False
+        self.barriers_should_open = True
+
+    # ------------------------------------------------------------
+    # BACKEND SYNC
+    # ------------------------------------------------------------
     def sync_backend_state(self, sb_state, train_arrival_ts, now):
-        """Synchronize crossing state from the backend ``sb`` value."""
+        """Sync backend sb state (0/1/2)."""
         if sb_state is None:
             return
 
-        if sb_state == 1 and train_arrival_ts:
-            if self.active_arrival_ts != train_arrival_ts:
-                self.active_arrival_ts = train_arrival_ts
-                self.green_started_at = None
-                self.barriers_opened_at = None
-                self.train_spawned = False
-            self.backend_state = sb_state
+        self.backend_state = sb_state
+
+        if self.active_arrival_ts != train_arrival_ts:
+            self.active_arrival_ts = train_arrival_ts
+            self.train_spawned = False  # Only reset train_spawned when a new arrival time is set
+            self.warning_started_at = None
+            self.green_started_at = None
+
+        # -------------------------
+        # WARNING (1)
+        # -------------------------
+        if sb_state == 1:
             self.blinking_active = True
             self.road_blocked = True
-            return
 
-        if sb_state == 0 and self.active_arrival_ts == train_arrival_ts:
-            self.backend_state = sb_state
+            if self.warning_started_at is None:
+                self.warning_started_at = now
+
+            if now - self.warning_started_at >= self.WARNING_TO_BARRIER_SECONDS:
+                self.barriers_should_close = True
+
+        # -------------------------
+        # TRAIN ACTIVE (0)
+        # -------------------------
+        elif sb_state == 0:
+            self.blinking_active = True
+            self.road_blocked = True
+            self.barriers_should_close = True
+
+        # -------------------------
+        # CLEAR / NORMAL (2)
+        # -------------------------
+        elif sb_state == 2:
+            self.barriers_should_open = True
+
             if self.green_started_at is None:
                 self.green_started_at = now
-                self.barriers_opened_at = None
-            self.blinking_active = True
-            self.road_blocked = True
-            return
 
-        if sb_state == 2 and self.active_arrival_ts is None:
-            self.backend_state = sb_state
+            if now - self.green_started_at >= self.GREEN_RELEASE_DELAY:
+                self._reset()
 
+    # ------------------------------------------------------------
+    # TRAIN SPAWN LOGIC (RESTORED)
+    # ------------------------------------------------------------
     def should_spawn_train(self, now):
-        """Return whether the train should spawn now."""
-        if not self.active_arrival_ts or self.train_spawned:
-            return False
-        return now >= self.active_arrival_ts / 1000.0
+        print("should spawn?", {
+            "active_arrival_ts": self.active_arrival_ts,
+            "train_spawned": self.train_spawned,
+            "now": now,
+            "arrival_time_sec": self.active_arrival_ts / 1000.0 if self.active_arrival_ts else None,
+        })
+        return (
+                self.active_arrival_ts is not None
+                and not self.train_spawned
+                and now >= self.active_arrival_ts / 1000.0
+        )
 
     def mark_train_spawned(self):
-        """Record that the current active train has spawned."""
         self.train_spawned = True
+        # self.active_arrival_ts = None  # Clear the arrival timestamp after spawning
+        print("yes")
 
-    def wants_barriers_lowered(self, now):
-        """Return whether the railway barriers should be lowered."""
-        if not self.active_arrival_ts:
-            return False
 
-        if self.green_started_at is not None:
-            return now < self.green_started_at + TRAIN_BARRIER_RELEASE_SECONDS
+    # ------------------------------------------------------------
+    # RESET
+    # ------------------------------------------------------------
+    def _reset(self):
+        self.warning_started_at = None
+        self.green_started_at = None
 
-        return now >= (self.active_arrival_ts / 1000.0) - TRAIN_BARRIER_LOWER_OFFSET
+        self.blinking_active = False
+        self.road_blocked = False
 
-    def update(self, now, barriers_open):
-        """Advance crossing state and return the next train time if scheduled."""
-        next_train_time = None
+        self.barriers_should_close = False
+        self.barriers_should_open = False
 
-        if self.green_started_at is not None:
-            if barriers_open:
-                if self.barriers_opened_at is None:
-                    self.barriers_opened_at = now
-                elif now - self.barriers_opened_at >= TRAIN_LIGHTS_OFF_DELAY_SECONDS:
-                    next_train_time = now + TRAIN_REPEAT_SECONDS
-                    self.backend_state = 0
-                    self.active_arrival_ts = None
-                    self.green_started_at = None
-                    self.barriers_opened_at = None
-                    self.train_spawned = False
-                    self.blinking_active = False
-                    self.road_blocked = False
-            else:
-                self.barriers_opened_at = None
-
-        return next_train_time
 

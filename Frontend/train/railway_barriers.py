@@ -21,23 +21,22 @@ from config.geometry import (
 
 
 class RailwayBarriers:
-    """Animated crossing barriers that open and close near the tracks."""
+    """Railway barriers controlled by crossing state."""
 
     def __init__(self):
-        """Create barriers in the fully open state."""
         self.progress = 0.0
 
-    def update(self, dt, should_lower):
-        """Move the barrier animation toward lowered or opened state."""
+    def update(self, dt, should_close, should_open):
         step = dt / BARRIER_ANIM_SECONDS
-        if should_lower:
+
+        if should_close:
             self.progress = min(1.0, self.progress + step)
-        else:
+
+        elif should_open:
             self.progress = max(0.0, self.progress - step)
 
     def is_open(self):
-        """Return whether the barriers are effectively open."""
-        return self.progress <= 0.001
+        return self.progress <= 0.01
 
     def _arm_endpoint(self, pivot, side):
         """Return the endpoint of a barrier arm for the current progress."""

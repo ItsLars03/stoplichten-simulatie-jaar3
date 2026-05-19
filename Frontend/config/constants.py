@@ -5,7 +5,9 @@ WIDTH, HEIGHT = 1100, 900
 FPS = 60
 
 # --- API ---
-API_URL = "http://localhost:5235/api/data"
+# API_URL = "http://localhost:5235/api/data"
+API_URL = "https://follicle-yogurt-decorator.ngrok-free.dev/data"
+# API_URL = "https://controller.jelte.frl/api/data"
 API_INTERVAL = 0.5
 
 # --- Speeds ---
@@ -79,7 +81,7 @@ TRAIN_BARRIER_LOWER_OFFSET = 15.0
 TRAIN_BARRIER_RELEASE_SECONDS = 10.0
 TRAIN_LIGHTS_OFF_DELAY_SECONDS = 5.0
 TRAIN_REPEAT_SECONDS = 120.0
-INITIAL_TRAIN_DELAY_SECONDS = 30.0
+INITIAL_TRAIN_DELAY_SECONDS = 20.0
 
 # --- Barriers ---
 BARRIER_ANIM_SECONDS = 1.4
