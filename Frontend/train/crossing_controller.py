@@ -83,12 +83,12 @@ class TrainCrossingController:
     # TRAIN SPAWN LOGIC (RESTORED)
     # ------------------------------------------------------------
     def should_spawn_train(self, now):
-        print("should spawn?", {
-            "active_arrival_ts": self.active_arrival_ts,
-            "train_spawned": self.train_spawned,
-            "now": now,
-            "arrival_time_sec": self.active_arrival_ts / 1000.0 if self.active_arrival_ts else None,
-        })
+        # print("should spawn?", {
+        #     "active_arrival_ts": self.active_arrival_ts,
+        #     "train_spawned": self.train_spawned,
+        #     "now": now,
+        #     "arrival_time_sec": self.active_arrival_ts / 1000.0 if self.active_arrival_ts else None,
+        # })
         return (
                 self.active_arrival_ts is not None
                 and not self.train_spawned
@@ -98,7 +98,7 @@ class TrainCrossingController:
     def mark_train_spawned(self):
         self.train_spawned = True
         # self.active_arrival_ts = None  # Clear the arrival timestamp after spawning
-        print("yes")
+        # print("yes")
 
 
     # ------------------------------------------------------------
