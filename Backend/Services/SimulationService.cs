@@ -83,8 +83,8 @@ public class SimulationService : ISimulationService
         return new SimulationResponseDto
         {
             TrafficLights = _repository.GetAll().ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value.State)
+                kvp => kvp.Key,
+                kvp => kvp.Value.State)
         };
     }
 
@@ -179,13 +179,7 @@ public class SimulationService : ISimulationService
 
     private static LightState GetGreenState(string lightId) => lightId switch
     {
-        "42" => Random.Shared.Next(3) switch
-        {
-            0 => LightState.Green,
-            1 => LightState.GreenRight,
-            _ => LightState.GreenStraightAndRight
-        },
-
+        "42" => LightState.GreenStraightAndRight,
         _ => LightState.Green
     };
 

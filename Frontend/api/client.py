@@ -14,11 +14,12 @@ def send_api(traffic_lights, train_arrival_ts, result):
     traffic_lights_api_format = []
 
     for traffic_light in traffic_lights:
-        traffic_lights_api_format.append({
-            "id": traffic_light.id,
-            "hasEntity": traffic_light.has_entity,
-            "triggeredTimestamp": traffic_light.triggered_ts or now,
-        })
+        if traffic_light.id != "sb":
+            traffic_lights_api_format.append({
+                "id": traffic_light.id,
+                "hasEntity": traffic_light.has_entity,
+                "triggeredTimestamp": traffic_light.triggered_ts or now,
+            })
 
     payload = {
         "currentTimestamp": now,
