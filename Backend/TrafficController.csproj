@@ -13,4 +13,28 @@
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.1.7" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="obj\Debug\net9.0\rjsmcshtml.dswa.cache.json" />
+      <Content Include="obj\Debug\net9.0\rjsmrazor.dswa.cache.json" />
+      <Content Include="obj\Debug\net9.0\rpswa.dswa.cache.json" />
+      <Content Include="obj\Debug\net9.0\staticwebassets.build.endpoints.json" />
+      <Content Include="obj\Debug\net9.0\staticwebassets.build.json" />
+      <Content Include="obj\Debug\net9.0\TrafficC.B7A661C9.Up2Date" />
+      <Content Include="obj\Debug\net9.0\TrafficController.csproj.CoreCompileInputs.cache" />
+      <Content Include="obj\Debug\net9.0\TrafficController.csproj.FileListAbsolute.txt" />
+      <Content Include="obj\Debug\net9.0\TrafficController.sourcelink.json" />
+      <Content Include="obj\project.assets.json" />
+      <Content Include="obj\project.nuget.cache" />
+      <Content Include="obj\project.packagespec.json" />
+      <Content Include="obj\rider.project.restore.info" />
+      <Content Include="obj\TrafficController.csproj.nuget.dgspec.json" />
+      <Content Include="obj\TrafficController.csproj.nuget.g.props" />
+      <Content Include="obj\TrafficController.csproj.nuget.g.targets" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="obj\Debug\net9.0\.NETCoreApp,Version=v9.0.AssemblyAttributes.cs" />
+      <Compile Include="obj\Debug\net9.0\TrafficController.MvcApplicationPartsAssemblyInfo.cs" />
+    </ItemGroup>
+
 </Project>

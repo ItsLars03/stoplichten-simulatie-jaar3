@@ -19,7 +19,6 @@ public class SimulationController : ControllerBase
     [HttpPost("data")]
     public async Task<ActionResult<SimulationResponseDto>> PostData([FromBody] SimulationRequestDto request)
     {
-        Console.WriteLine("Test");
         SimulationResponseDto response = _simulationService.ProcessSimulationData(request);
         return Ok(response);
     }

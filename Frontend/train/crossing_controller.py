@@ -29,6 +29,7 @@ class TrainCrossingController:
 
         self.barriers_should_close = False
         self.barriers_should_open = True
+        self.barriers_opened_at = None
 
     # ------------------------------------------------------------
     # BACKEND SYNC
@@ -72,12 +73,7 @@ class TrainCrossingController:
         # -------------------------
         elif sb_state == 2:
             self.barriers_should_open = True
-
-            if self.green_started_at is None:
-                self.green_started_at = now
-
-            if now - self.green_started_at >= self.GREEN_RELEASE_DELAY:
-                self._reset()
+            self.barriers_should_close = False
 
     # ------------------------------------------------------------
     # TRAIN SPAWN LOGIC (RESTORED)
@@ -97,8 +93,6 @@ class TrainCrossingController:
 
     def mark_train_spawned(self):
         self.train_spawned = True
-        # self.active_arrival_ts = None  # Clear the arrival timestamp after spawning
-        # print("yes")
 
 
     # ------------------------------------------------------------
@@ -113,5 +107,23 @@ class TrainCrossingController:
 
         self.barriers_should_close = False
         self.barriers_should_open = False
+        self.barriers_opened_at = None
 
+    def update(self, now, barriers_open):
+        """Update delayed release logic after barriers open."""
 
+        # only relevant while recovering from train passage
+        if self.backend_state != 2:
+            self.barriers_opened_at = None
+            return
+
+        # wait until barriers are fully open
+        if barriers_open:
+            if self.barriers_opened_at is None:
+                self.barriers_opened_at = now
+
+            # keep blinking 5 sec after barriers opened
+            elif now - self.barriers_opened_at >= self.GREEN_RELEASE_DELAY:
+                self._reset()
+        else:
+            self.barriers_opened_at = None

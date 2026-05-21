@@ -16,9 +16,11 @@ public class SimulationService : ISimulationService
     private static readonly TimeSpan TrainOrangeBeforeArrival = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan TrainRedBeforeArrival = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan TrainGreenAfterArrival = TimeSpan.FromSeconds(10);
-    private static readonly TimeSpan CrossingSafetyBuffer = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan CrossingSafetyBuffer = TimeSpan.FromSeconds(7);
 
     private bool _crossingBlocked;
+    
+    private DateTimeOffset? _activeTrainArrival;
 
     public SimulationService(TrafficLightsRepository repository, IConflictMatrix conflictMatrix)
     {
@@ -59,14 +61,13 @@ public class SimulationService : ISimulationService
         {
             var elapsed = now - light.StateChangedAt!.Value;
 
-            if (IsGreenState(light.State) &&
-                elapsed >= GreenDuration)
+            if (IsGreenState(light.State) && elapsed >= GreenDuration)
             {
                 light.State = LightState.Orange;
                 light.StateChangedAt = now;
             }
-            else if (light.State == LightState.Orange &&
-                     elapsed >= OrangeDuration)
+            
+            else if (light.State == LightState.Orange && elapsed >= OrangeDuration)
             {
                 light.State = LightState.Red;
                 light.StateChangedAt = null;
@@ -74,9 +75,7 @@ public class SimulationService : ISimulationService
             }
         }
 
-        ProcessTrainLogic(
-            request.CurrentTimestamp,
-            request.TrainArrivalTimestamp);
+        ProcessTrainLogic(request.CurrentTimestamp, request.TrainArrivalTimestamp);
 
         AssignGreens(now);
 
@@ -103,22 +102,19 @@ public class SimulationService : ISimulationService
         // Do not create a new phase while another phase is active
         if (allLights.Values.Any(l => l.InCycle))
         {
-            Console.WriteLine(
-                "Skipping light assignment because a cycle is active");
-
+            Console.WriteLine("Skipping light assignment because a cycle is active");
             return;
         }
 
+        Console.WriteLine($"Crossing blocked? {_crossingBlocked}");
         // Oldest waiting traffic light gets priority
         var oldestWaiting = allLights.Values
             .Where(l =>
                 l.Id != "sb" &&
                 l.HasEntity &&
                 l.TriggeredUnixTimeStamp.HasValue &&
-                (
-                    !_crossingBlocked ||
-                    !_conflictMatrix.Conflicts("sb", l.Id)
-                ))
+                (!_crossingBlocked || !_conflictMatrix.Conflicts("sb", l.Id)
+            ))
             .OrderBy(l => l.TriggeredUnixTimeStamp)
             .FirstOrDefault();
 
@@ -146,14 +142,12 @@ public class SimulationService : ISimulationService
             }
 
             // Keep rail-conflicting lights blocked
-            if (_crossingBlocked &&
-                _conflictMatrix.Conflicts("sb", light.Id))
+            if (_crossingBlocked && _conflictMatrix.Conflicts("sb", light.Id))
             {
                 continue;
             }
 
-            bool conflicts = phaseLights.Any(existing =>
-                _conflictMatrix.Conflicts(existing.Id, light.Id));
+            bool conflicts = phaseLights.Any(existing => _conflictMatrix.Conflicts(existing.Id, light.Id));
 
             if (!conflicts)
             {
@@ -183,26 +177,40 @@ public class SimulationService : ISimulationService
         _ => LightState.Green
     };
 
-    private void ProcessTrainLogic(
-        long currentTimestamp,
-        long trainArrivalTimestamp)
+    private void ProcessTrainLogic(long currentTimestamp, long incomingTrainArrivalTimestamp)
     {
-        var current =
-            DateTimeOffset.FromUnixTimeMilliseconds(currentTimestamp);
+        var current = DateTimeOffset.FromUnixTimeMilliseconds(currentTimestamp);
 
-        DateTimeOffset? arrival =
-            trainArrivalTimestamp != 0
-                ? DateTimeOffset.FromUnixTimeMilliseconds(
-                    trainArrivalTimestamp)
-                : null;
+        DateTimeOffset? incomingArrival = incomingTrainArrivalTimestamp  != 0 ? DateTimeOffset.FromUnixTimeMilliseconds(incomingTrainArrivalTimestamp) : null;
+
+        bool currentCycleFinished =
+            !_activeTrainArrival.HasValue ||
+            current > _activeTrainArrival.Value + TrainGreenAfterArrival + CrossingSafetyBuffer;
+        
+        // only replace the active train when previous cycle is fully finished
+        if (currentCycleFinished)
+        {
+            _activeTrainArrival = incomingArrival;
+
+            if (_activeTrainArrival.HasValue)
+            {
+                Console.WriteLine(
+                    $"Accepted new active train arrival: {_activeTrainArrival}");
+            }
+        }
+
+        var activeArrival = _activeTrainArrival;
 
         var timeUntilTrain =
-            arrival.HasValue
-                ? arrival.Value - current
+            activeArrival.HasValue
+                ? activeArrival.Value - current
                 : (TimeSpan?)null;
 
-        // Determine whether traffic crossing the rails
-        // should still remain blocked
+        /*
+         * Block rail-conflicting traffic from:
+         * 20s before arrival
+         * until 15s after arrival
+         */
         _crossingBlocked =
             timeUntilTrain.HasValue &&
             timeUntilTrain.Value <= TrainOrangeBeforeArrival &&
@@ -216,18 +224,18 @@ public class SimulationService : ISimulationService
             light.InCycle = false;
             light.StateChangedAt = null;
 
-            // No train scheduled
-            if (!arrival.HasValue || !timeUntilTrain.HasValue)
+            // No active train
+            if (!activeArrival.HasValue || !timeUntilTrain.HasValue)
             {
                 light.State = LightState.Green;
 
                 Console.WriteLine(
-                    "Train light GREEN because no train is scheduled");
+                    "Train light GREEN because no active train exists");
 
                 return;
             }
 
-            // More than 20 seconds away
+            // More than 20s before arrival
             if (timeUntilTrain.Value > TrainOrangeBeforeArrival)
             {
                 light.State = LightState.Green;
@@ -255,24 +263,23 @@ public class SimulationService : ISimulationService
                 light.State = LightState.Red;
 
                 Console.WriteLine(
-                    "Train light RED because train is occupying crossing");
+                    "Train light RED because train occupies crossing");
 
                 return;
             }
 
-            // Train passed, leave animation active
+            // Train cleared
             light.State = LightState.Green;
 
             Console.WriteLine(
-                "Train light GREEN because train has cleared");
+                "Train light GREEN because train cleared");
         });
 
         var sbLight = _repository.GetAll()
             .GetValueOrDefault("sb");
 
         Console.WriteLine(
-            $"Time until train: " +
-            $"{(timeUntilTrain.HasValue ? timeUntilTrain.Value.ToString(@"hh\:mm\:ss\.ff") : "N/A")}\n" +
+            $"Time until train: " + $"{(timeUntilTrain.HasValue ? timeUntilTrain.Value.ToString(@"hh\:mm\:ss\.ff") : "N/A")}\n" +
             $"Crossing blocked: {_crossingBlocked}\n" +
             $"Train light state: {sbLight?.State}");
     }

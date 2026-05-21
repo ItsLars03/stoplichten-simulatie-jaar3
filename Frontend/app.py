@@ -193,6 +193,7 @@ def main():
             crossing.barriers_should_close,
             crossing.barriers_should_open
         )
+        crossing.update(now, barriers.is_open())
 
         # if there isnt an active train arrival time, create new one
         # if crossing.active_arrival_ts is None:
