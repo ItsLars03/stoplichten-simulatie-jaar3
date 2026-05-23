@@ -115,7 +115,7 @@ def main():
                 # Set the next train arrival time
                 next_train_time = now + TRAIN_REPEAT_SECONDS
                 train_arrival_ts = int(next_train_time * 1000)
-                crossing.active_arrival_ts = train_arrival_ts
+                # crossing.active_arrival_ts = train_arrival_ts
 
         # remove any trains that have completed their route
         trains = [train for train in trains if not train.done]
@@ -179,7 +179,7 @@ def main():
         if api_result["data"]:
             response_data = api_result["data"]
             sb_state = apply_response(traffic_lights, response_data["payload"])
-            crossing.active_arrival_ts = train_arrival_ts
+            # crossing.active_arrival_ts = train_arrival_ts
             crossing.sync_backend_state(
                 sb_state,
                 train_arrival_ts,
